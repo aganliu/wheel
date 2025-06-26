@@ -1,159 +1,127 @@
+
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <title>孩子奖励转盘</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-image: url("https://i.pinimg.com/originals/f4/1b/5c/f41b5cc8c00385a2c926d7c18f04eb07.jpg");
-      background-size: cover;
-      font-family: sans-serif;
-      color: #fff;
-      text-align: center;
-    }
-    .wheel-container {
-      margin-top: 50px;
-      position: relative;
-    }
-    .wheel {
-      width: 400px;
-      height: 400px;
-      border-radius: 50%;
-      border: 10px solid #fff;
-      position: relative;
-      margin: 0 auto;
-      background: #9d6bcb;
-      overflow: hidden;
-      transform: rotate(0deg);
-      transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);
-    }
-    .segment {
-      width: 50%;
-      height: 50%;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform-origin: 0% 0%;
-      background: #d1a3f8;
-      text-align: left;
-      padding: 10px;
-      box-sizing: border-box;
-      font-size: 14px;
-    }
-    #pointer {
-      width: 0; 
-      height: 0; 
-      border-left: 20px solid transparent;
-      border-right: 20px solid transparent;
-      border-bottom: 40px solid #fff;
-      position: absolute;
-      top: -10px;
-      left: calc(50% - 20px);
-    }
-    button {
-      margin-top: 30px;
-      padding: 10px 20px;
-      font-size: 18px;
-      background: #fff;
-      border: none;
-      border-radius: 10px;
-      color: #9d6bcb;
-      cursor: pointer;
-    }
-    #result {
-      margin-top: 20px;
-      font-size: 20px;
-      font-weight: bold;
-    }
-    #counts {
-      margin-top: 30px;
-      text-align: left;
-      display: inline-block;
-      background: rgba(0,0,0,0.5);
-      padding: 10px;
-      border-radius: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>小阿甘的快乐大转盘</title>
+    <style>
+
+#pointer {
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 30px solid white;
+    position: absolute;
+    top: -40px;
+    left: calc(50% - 15px);
+    z-index: 2;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: white;
+            text-align: center;
+        }
+        h1 {
+            margin-top: 40px;
+            font-size: 2em;
+        }
+        #wheel {
+            margin: 30px auto;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            position: relative;
+            background-color: #a678d6;
+        }
+        .segment {
+            width: 50%;
+            height: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: 0% 0%;
+            background-color: transparent;
+        }
+        #spinButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        #stats {
+            margin-top: 20px;
+            font-size: 0.9em;
+            white-space: pre-line;
+        }
+    </style>
 </head>
 <body>
-  <div class="wheel-container">
-    <div id="pointer"></div>
-    <div id="wheel" class="wheel"></div>
-    <button onclick="spin()">开始抽奖</button>
+    <h1>🎡小阿甘的快乐大转盘🎡</h1>
+    <canvas id="wheel" width="300" height="300"></canvas><br>
+    <button id="spinButton">开始抽奖</button>
     <div id="result"></div>
-    <div id="counts"></div>
-  </div>
+    <div id="stats"></div>
+    <script>
+        const prizes = [
+            "亲子故事", "周末外出探险", "下次小红花双倍奖励", "看动画片20分钟",
+            "疯狂购物一次10元以内", "再来一次", "现场说一个小愿望", "玩小游戏一次（如爬树、轮滑、单车等）", "奖励大餐"
+        ];
+        const prizeShort = ["故事", "探险", "双倍花", "动画", "购物", "再抽", "小愿望", "小游戏", "大餐"];
+        const stats = {};
+        prizes.forEach(p => stats[p] = 0);
 
-  <script>
-    const prizes = [
-      { name: "亲子故事", weight: 10 },
-      { name: "周末外出探险", weight: 10 },
-      { name: "下次小红花双倍奖励", weight: 10 },
-      { name: "看动画片20分钟", weight: 10 },
-      { name: "疯狂购物一次10元以内", weight: 10 },
-      { name: "再来一次", weight: 10 },
-      { name: "现场说一个小愿望", weight: 20 },
-      { name: "玩小游戏一次（如爬树、轮滑、单车等）", weight: 10 },
-      { name: "奖励大餐", weight: 10 }
-    ];
+        const canvas = document.getElementById("wheel");
+        const ctx = canvas.getContext("2d");
+        const spinButton = document.getElementById("spinButton");
+        const resultDiv = document.getElementById("result");
+        const statsDiv = document.getElementById("stats");
+        let angle = 0;
 
-    const totalWeight = prizes.reduce((sum, p) => sum + p.weight, 0);
-    const counts = {};
-    prizes.forEach(p => counts[p.name] = 0);
-
-    const wheel = document.getElementById("wheel");
-    const result = document.getElementById("result");
-    const countsDiv = document.getElementById("counts");
-
-    function createSegments() {
-      const angleStep = 360 / prizes.length;
-      prizes.forEach((prize, index) => {
-        const seg = document.createElement("div");
-        seg.className = "segment";
-        seg.style.transform = `rotate(${index * angleStep}deg) skewY(${90 - angleStep}deg)`;
-        seg.innerHTML = `<div style="transform: skewY(${angleStep - 90}deg);">${prize.name}</div>`;
-        wheel.appendChild(seg);
-      });
-    }
-
-    let currentRotation = 0;
-
-    function spin() {
-      const rand = Math.random() * totalWeight;
-      let sum = 0;
-      let chosenIndex = 0;
-      for (let i = 0; i < prizes.length; i++) {
-        sum += prizes[i].weight;
-        if (rand <= sum) {
-          chosenIndex = i;
-          break;
+        function drawWheel() {
+            const radius = canvas.width / 2;
+            const num = prizes.length;
+            const angleStep = 2 * Math.PI / num;
+            for (let i = 0; i < num; i++) {
+                ctx.beginPath();
+                ctx.moveTo(radius, radius);
+                ctx.arc(radius, radius, radius, i * angleStep, (i + 1) * angleStep);
+                ctx.fillStyle = i % 2 === 0 ? "#9b59b6" : "#8e44ad";
+                ctx.fill();
+                ctx.save();
+                ctx.translate(radius, radius);
+                ctx.rotate((i + 0.5) * angleStep);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "white";
+                ctx.font = "14px Arial";
+                ctx.fillText(prizeShort[i], radius - 10, 5);
+                ctx.restore();
+            }
         }
-      }
 
-      const anglePerSlice = 360 / prizes.length;
-      const rotateTo = 360 * 5 + (360 - chosenIndex * anglePerSlice - anglePerSlice / 2);
-      currentRotation += rotateTo;
+        function updateStats() {
+            statsDiv.innerText = "奖项统计：\n" + prizes.map(p => `${p}: ${stats[p]} 次`).join("\n");
+        }
 
-      wheel.style.transition = "transform 5s ease-out";
-      wheel.style.transform = `rotate(${currentRotation}deg)`;
+        function spinWheel() {
+            const randomIndex = Math.floor(Math.random() * prizes.length);
+            stats[prizes[randomIndex]] += 1;
+            updateStats();
+            resultDiv.innerText = `中奖了！【${prizes[randomIndex]}】`;
+        }
 
-      setTimeout(() => {
-        const prize = prizes[chosenIndex];
-        counts[prize.name]++;
-        result.innerText = `中奖了！【${prize.name}】`;
-        alert(`恭喜中奖：${prize.name}`);
-        renderCounts();
-      }, 5200);
-    }
-
-    function renderCounts() {
-      countsDiv.innerHTML = '<strong>奖项统计：</strong><br>' +
-        prizes.map(p => `${p.name}: ${counts[p.name]} 次`).join('<br>');
-    }
-
-    createSegments();
-  </script>
+        drawWheel();
+        updateStats();
+        spinButton.onclick = spinWheel;
+    </script>
 </body>
 </html>
