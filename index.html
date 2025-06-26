@@ -2,126 +2,143 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <title>小阿甘的快乐大转盘</title>
-    <style>
-
-#pointer {
-    width: 0;
-    height: 0;
-    border-left: 15px solid transparent;
-    border-right: 15px solid transparent;
-    border-bottom: 30px solid white;
-    position: absolute;
-    top: -40px;
-    left: calc(50% - 15px);
-    z-index: 2;
-}
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: white;
-            text-align: center;
-        }
-        h1 {
-            margin-top: 40px;
-            font-size: 2em;
-        }
-        #wheel {
-            margin: 30px auto;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            position: relative;
-            background-color: #a678d6;
-        }
-        .segment {
-            width: 50%;
-            height: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform-origin: 0% 0%;
-            background-color: transparent;
-        }
-        #spinButton {
-            margin-top: 20px;
-            padding: 10px 20px;
-        }
-        #result {
-            margin-top: 20px;
-            font-size: 1.2em;
-        }
-        #stats {
-            margin-top: 20px;
-            font-size: 0.9em;
-            white-space: pre-line;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小阿甘的快乐大转盘</title>
+  <style>
+    body {
+      background: linear-gradient(to bottom, #b18ddb, #e4c9f8);
+      margin: 0;
+      font-family: "Arial", sans-serif;
+      text-align: center;
+    }
+    h1 {
+      margin-top: 30px;
+      font-size: 2rem;
+    }
+    canvas {
+      margin-top: 20px;
+      background-color: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    #pointer {
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 30px solid #fff;
+      margin: 0 auto;
+      position: relative;
+      top: -10px;
+      z-index: 2;
+    }
+    button {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      padding: 10px 20px;
+      border: none;
+      background: #8e44ad;
+      color: white;
+      border-radius: 10px;
+    }
+    #stats {
+      margin-top: 20px;
+      padding: 0 20px;
+      font-size: 0.95rem;
+      white-space: pre-line;
+    }
+  </style>
 </head>
 <body>
-    <h1>🎡小阿甘的快乐大转盘🎡</h1>
-    <canvas id="wheel" width="300" height="300"></canvas><br>
-    <button id="spinButton">开始抽奖</button>
-    <div id="result"></div>
-    <div id="stats"></div>
-    <script>
-        const prizes = [
-            "亲子故事", "周末外出探险", "下次小红花双倍奖励", "看动画片20分钟",
-            "疯狂购物一次10元以内", "再来一次", "现场说一个小愿望", "玩小游戏一次（如爬树、轮滑、单车等）", "奖励大餐"
-        ];
-        const prizeShort = ["故事", "探险", "双倍花", "动画", "购物", "再抽", "小愿望", "小游戏", "大餐"];
-        const stats = {};
-        prizes.forEach(p => stats[p] = 0);
+  <h1>🎡 小阿甘的快乐大转盘 🎡</h1>
+  <div id="pointer"></div>
+  <canvas id="wheel" width="300" height="300"></canvas>
+  <br>
+  <button id="spin">开始抽奖</button>
+  <div id="stats"></div>
 
-        const canvas = document.getElementById("wheel");
-        const ctx = canvas.getContext("2d");
-        const spinButton = document.getElementById("spinButton");
-        const resultDiv = document.getElementById("result");
-        const statsDiv = document.getElementById("stats");
-        let angle = 0;
+  <script>
+    const prizes = [
+      ["亲子故事", "故事"],
+      ["周末外出探险", "探险"],
+      ["下次小红花双倍奖励", "双倍花"],
+      ["看动画片20分钟", "动画"],
+      ["疯狂购物一次10元以内", "购物"],
+      ["再来一次", "再抽"],
+      ["现场说一个小愿望", "愿望"],
+      ["玩小游戏一次，如爬树、轮滑、单车等", "小游戏"],
+      ["奖励大餐", "大餐"]
+    ];
+    const stats = Array(prizes.length).fill(0);
 
-        function drawWheel() {
-            const radius = canvas.width / 2;
-            const num = prizes.length;
-            const angleStep = 2 * Math.PI / num;
-            for (let i = 0; i < num; i++) {
-                ctx.beginPath();
-                ctx.moveTo(radius, radius);
-                ctx.arc(radius, radius, radius, i * angleStep, (i + 1) * angleStep);
-                ctx.fillStyle = i % 2 === 0 ? "#9b59b6" : "#8e44ad";
-                ctx.fill();
-                ctx.save();
-                ctx.translate(radius, radius);
-                ctx.rotate((i + 0.5) * angleStep);
-                ctx.textAlign = "right";
-                ctx.fillStyle = "white";
-                ctx.font = "14px Arial";
-                ctx.fillText(prizeShort[i], radius - 10, 5);
-                ctx.restore();
-            }
-        }
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+    const radius = canvas.width / 2;
+    const spinButton = document.getElementById("spin");
+    const statsDiv = document.getElementById("stats");
+    let startAngle = 0;
+    let spinning = false;
 
-        function updateStats() {
-            statsDiv.innerText = "奖项统计：\n" + prizes.map(p => `${p}: ${stats[p]} 次`).join("\n");
-        }
+    function drawWheel() {
+      const step = 2 * Math.PI / prizes.length;
+      for (let i = 0; i < prizes.length; i++) {
+        const angle = startAngle + i * step;
+        ctx.beginPath();
+        ctx.moveTo(radius, radius);
+        ctx.arc(radius, radius, radius, angle, angle + step);
+        ctx.fillStyle = i % 2 === 0 ? "#9b59b6" : "#8e44ad";
+        ctx.fill();
+        ctx.save();
+        ctx.translate(radius, radius);
+        ctx.rotate(angle + step / 2);
+        ctx.fillStyle = "white";
+        ctx.font = "bold 14px Arial";
+        ctx.textAlign = "right";
+        ctx.fillText(prizes[i][1], radius - 10, 5);
+        ctx.restore();
+      }
+    }
 
-        function spinWheel() {
-            const randomIndex = Math.floor(Math.random() * prizes.length);
-            stats[prizes[randomIndex]] += 1;
-            updateStats();
-            resultDiv.innerText = `中奖了！【${prizes[randomIndex]}】`;
-        }
+    function updateStats() {
+      statsDiv.innerText = "🎯 奖项统计：\n" + prizes.map((p, i) => `${p[0]}: ${stats[i]} 次`).join("\n");
+    }
 
+    function spinWheel() {
+      if (spinning) return;
+      spinning = true;
+      const randomIndex = Math.floor(Math.random() * prizes.length);
+      const arc = 360 / prizes.length;
+      const rotateTo = 360 * 5 + (prizes.length - randomIndex) * arc - arc / 2;
+
+      let current = 0;
+      const duration = 4000;
+      const start = performance.now();
+
+      function animate(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        current = rotateTo * ease;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        startAngle = (current * Math.PI / 180) % (2 * Math.PI);
         drawWheel();
-        updateStats();
-        spinButton.onclick = spinWheel;
-    </script>
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          stats[randomIndex]++;
+          updateStats();
+          alert(`🎉 中奖了！【${prizes[randomIndex][0]}】`);
+          spinning = false;
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    drawWheel();
+    updateStats();
+    spinButton.addEventListener("click", spinWheel);
+  </script>
 </body>
 </html>
